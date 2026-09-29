@@ -1,0 +1,76 @@
+{
+  "capabilities": {
+    "extensions": [
+      {
+        "description": "Interactive AIC administration with A2UI v0.9, Material views and basic-catalog fallback.",
+        "params": {
+          "supportedCatalogIds": [
+            "https://www.gstatic.com/vertexaisearch/a2ui/v0_9/gemini_enterprise_composite_catalog.json",
+            "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+          ]
+        },
+        "required": false,
+        "uri": "https://a2ui.org/a2a-extension/a2ui/v0.9"
+      }
+    ],
+    "streaming": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json+a2ui"
+  ],
+  "defaultOutputModes": [
+    "text/plain",
+    "application/json+a2ui"
+  ],
+  "description": "Provides user search, password reset, session/MFA management, group/role membership, direct assignments, and audit lookup.",
+  "documentationUrl": "https://marketplace.pingone.com/item/google-gemini-enterprise-pingone-aic-administrator-agent",
+  "iconUrl": "https://storage.googleapis.com/tech-partner-ping-public-branding/ping-logo-square-1251.png",
+  "name": "PingOne AIC Administrator Agent",
+  "preferredTransport": "HTTP+JSON",
+  "protocolVersion": "0.3",
+  "provider": {
+    "organization": "Ping Identity",
+    "url": "https://www.pingidentity.com"
+  },
+  "security": [
+    {
+      "google-oauth2": [
+        "https://www.googleapis.com/auth/cloud-platform"
+      ]
+    }
+  ],
+  "securitySchemes": {
+    "google-oauth2": {
+      "description": "Google OAuth2 access token with the cloud-platform scope. Agent Runtime rejects requests without one before the agent runs.",
+      "flows": {
+        "authorizationCode": {
+          "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+          "scopes": {
+            "https://www.googleapis.com/auth/cloud-platform": "Invoke the Agent Runtime A2A service"
+          },
+          "tokenUrl": "https://oauth2.googleapis.com/token"
+        }
+      },
+      "type": "oauth2"
+    }
+  },
+  "skills": [
+    {
+      "description": "Provides user search, password reset, session/MFA management, group/role membership, direct assignments, and audit lookup.",
+      "examples": [
+        "Search users named Smith",
+        "Show the groups for a user"
+      ],
+      "id": "pingaic_admin_agent",
+      "name": "PingOne AIC Administrator Agent",
+      "tags": [
+        "identity",
+        "help-desk",
+        "pingaic"
+      ]
+    }
+  ],
+  "url": "https://marketplace.pingone.com/item/google-gemini-enterprise-pingone-aic-administrator-agent",
+  "version": "1.0.4"
+}

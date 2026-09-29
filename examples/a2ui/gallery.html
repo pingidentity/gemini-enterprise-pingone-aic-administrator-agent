@@ -1,0 +1,195 @@
+<style>
+#pingaic-workspace-preview {
+  --pui-surface: light-dark(#fff, #202124);
+  --pui-ink: light-dark(#202124, #e8eaed);
+  --pui-muted: light-dark(#5f6368, #bdc1c6);
+  --pui-line: light-dark(#dadce0, #5f6368);
+  --pui-soft: light-dark(#f1f3f4, #303134);
+  --pui-action: light-dark(#185abc, #aecbfa);
+  --pui-on-action: light-dark(#fff, #16243b);
+  --pui-danger: light-dark(#b3261e, #f2b8b5);
+  --pui-on-danger: light-dark(#fff, #601410);
+  --pui-space: 16px;
+  color: var(--pui-ink); font: 14px/1.5 Roboto, Arial, sans-serif;
+  color-scheme: light dark; width: 100%;
+}
+#pingaic-workspace-preview * { box-sizing: border-box; }
+#pingaic-workspace-preview .pui-toolbar { display:flex; gap:16px; flex-wrap:wrap; padding:0 0 16px; align-items:end; }
+#pingaic-workspace-preview .pui-field { display:flex; flex-direction:column; gap:6px; min-width:0; font-weight:500; }
+#pingaic-workspace-preview .pui-toolbar .pui-field { flex:1 1 180px; }
+#pingaic-workspace-preview .pui-surface { background:var(--pui-surface); border:1px solid var(--pui-line); border-radius:16px; padding:20px; min-width:0; }
+#pingaic-workspace-preview .pui-column { display:flex; flex-direction:column; gap:12px; min-width:0; }
+#pingaic-workspace-preview .pui-row { display:flex; flex-wrap:wrap; gap:10px; min-width:0; }
+#pingaic-workspace-preview .pui-card { border:1px solid var(--pui-line); border-radius:12px; padding:var(--pui-space); display:flex; flex-direction:column; gap:10px; min-width:0; }
+#pingaic-workspace-preview p { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+#pingaic-workspace-preview .pui-h2 { font-size:22px; font-weight:500; margin:4px 0 8px; }
+#pingaic-workspace-preview .pui-h3 { font-size:19px; font-weight:500; }
+#pingaic-workspace-preview .pui-h4 { font-size:16px; font-weight:500; }
+#pingaic-workspace-preview .pui-caption { font-size:12px; color:var(--pui-muted); }
+#pingaic-workspace-preview button, #pingaic-workspace-preview input, #pingaic-workspace-preview select, #pingaic-workspace-preview textarea {
+  font:inherit; color:var(--pui-ink); border:1px solid var(--pui-line); background:var(--pui-surface); border-radius:6px;
+}
+#pingaic-workspace-preview button { padding:8px 14px; cursor:pointer; color:var(--pui-action); min-height:40px; max-width:100%; white-space:normal; }
+#pingaic-workspace-preview button:hover { background:var(--pui-soft); }
+#pingaic-workspace-preview .pui-primary { background:var(--pui-action); color:var(--pui-on-action); border-color:transparent; }
+#pingaic-workspace-preview .pui-primary:hover { filter:brightness(.93); background:var(--pui-action); }
+#pingaic-workspace-preview .pui-danger { color:var(--pui-danger); }
+#pingaic-workspace-preview .pui-primary.pui-danger { background:var(--pui-danger); color:var(--pui-on-danger); }
+#pingaic-workspace-preview input, #pingaic-workspace-preview select, #pingaic-workspace-preview textarea { padding:10px; width:100%; min-width:0; }
+#pingaic-workspace-preview textarea { min-height:100px; resize:vertical; }
+#pingaic-workspace-preview .pui-check { display:flex; gap:10px; align-items:center; }
+#pingaic-workspace-preview .pui-check input { width:auto; }
+#pingaic-workspace-preview .pui-table-wrap { max-width:100%; overflow-x:auto; }
+#pingaic-workspace-preview table { width:100%; border-collapse:collapse; font-size:13px; }
+#pingaic-workspace-preview td, #pingaic-workspace-preview th { text-align:left; padding:10px 8px; border-bottom:1px solid var(--pui-line); vertical-align:top; overflow-wrap:anywhere; white-space:pre-wrap; min-width:70px; }
+#pingaic-workspace-preview th { font-weight:500; color:var(--pui-muted); }
+#pingaic-workspace-preview caption { text-align:left; padding:6px 8px; font-weight:500; }
+#pingaic-workspace-preview .pui-tabs { display:flex; flex-wrap:wrap; gap:6px; border-bottom:1px solid var(--pui-line); padding-bottom:8px; margin-bottom:12px; }
+#pingaic-workspace-preview .pui-tabs button { border:0; }
+#pingaic-workspace-preview .pui-tabs [aria-selected=true] { background:var(--pui-soft); }
+#pingaic-workspace-preview .pui-chart { display:flex; flex-direction:column; gap:12px; }
+#pingaic-workspace-preview .pui-bar-row { display:grid; grid-template-columns:minmax(80px,120px) minmax(0,1fr) 32px; gap:10px; align-items:center; }
+#pingaic-workspace-preview .pui-track { background:var(--pui-soft); }
+#pingaic-workspace-preview .pui-bar { height:20px; background:var(--pui-action); }
+#pingaic-workspace-preview .pui-event { margin-top:14px; color:var(--pui-muted); }
+#pingaic-workspace-preview pre { white-space:pre-wrap; overflow-wrap:anywhere; color:var(--pui-ink); }
+#pingaic-workspace-preview img { width:152px; height:26px; object-fit:contain; align-self:flex-start; }
+@media(max-width:440px) {
+  #pingaic-workspace-preview .pui-surface { padding:12px; }
+  #pingaic-workspace-preview .pui-card { padding:12px; }
+  #pingaic-workspace-preview td, #pingaic-workspace-preview th { padding:8px 6px; }
+  #pingaic-workspace-preview .pui-row button { flex:1 1 130px; }
+}
+@media(pointer:coarse) {
+  #pingaic-workspace-preview button { min-height:44px; }
+  #pingaic-workspace-preview input, #pingaic-workspace-preview select, #pingaic-workspace-preview textarea { font-size:16px; }
+}
+</style>
+<div id="pingaic-workspace-preview" aria-label="PingOne AIC workspace preview">
+  <div class="pui-toolbar">
+    <label class="pui-field">Preview view<select data-view aria-label="Preview view"></select></label>
+    <label class="pui-field">Component catalog<select data-catalog aria-label="Component catalog"></select></label>
+  </div>
+  <section class="pui-surface" data-surface aria-label="Administration workspace"></section>
+  <details class="pui-event" data-events><summary>Sample action · synthetic data, no API calls</summary><pre data-event aria-live="polite">Select a control to inspect its action.</pre></details>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('pingaic-workspace-preview');
+  const galleries = /* FIXTURE_DATA */ {};
+  const catalogPicker = root.querySelector('[data-catalog]'), viewPicker = root.querySelector('[data-view]');
+  let catalog = Object.keys(galleries)[0], scenario = 'User profile', model, components, surfaceId;
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if(cls) n.className=cls; if(text!==undefined) n.textContent=String(text); return n; };
+  const resolve = v => v && typeof v==='object' && v.path ? v.path.split('/').slice(1).reduce((x,k)=>x?.[k],model) : v;
+  const update = (binding,value) => { const keys=binding.path.split('/').slice(1), key=keys.pop(); keys.reduce((x,k)=>x[k],model)[key]=value; };
+  function show(name) {
+    scenario=name; viewPicker.value=name;
+    const messages=galleries[catalog][scenario];
+    model=structuredClone(messages.find(m=>m.updateDataModel).updateDataModel.value);
+    const state=messages.find(m=>m.updateComponents).updateComponents;
+    surfaceId=state.surfaceId; components=Object.fromEntries(state.components.map(c=>[c.id,c]));
+    root.querySelector('[data-surface]').replaceChildren(render('root'));
+  }
+  function action(c) {
+    const event=c.action.event;
+    const payload={version:'v0.9',action:{name:event.name,surfaceId,sourceComponentId:c.id,timestamp:new Date().toISOString(),
+      context:Object.fromEntries(Object.entries(event.context).map(([k,v])=>[k,resolve(v)]))}};
+    root.querySelector('[data-event]').textContent=JSON.stringify(payload,null,2);
+    root.querySelector('[data-events]').open=true;
+    const target=event.name.replace('pingaic.','');
+    const routes={'read.get_user':'User profile','read.search_users':'User search','read.list_user_groups':'Groups & roles',
+      'read.list_user_assignments':'Assignments','read.get_user_activity':'Recent activity','read.find_application':'Applications',
+      'view.workspace':'User search','view.set_user_status':'Account status','view.unenroll_mfa_device':'MFA removal',
+      'view.change_user_membership':'Membership form','view.change_user_assignment':'Assignment form',
+      'view.create_oidc_application':'OIDC application','view.create_saml_application':'SAML application'};
+    // Only matching read/form navigation is simulated. Review actions remain
+    // inspectable events: this gallery never pretends to validate or execute a write.
+    if(routes[target]) show(routes[target]);
+  }
+  function render(id) {
+    const c=components[id]; if(!c) return el('p','','Unavailable component');
+    const type=c.component.replace(/^Material/,''); let n;
+    if(type==='Text') return el('p','pui-'+(c.usageHint||c.variant||'body'),resolve(c.text)??'');
+    if(type==='Image') { n=el('img'); n.src='LOGO_DATA_URI'; n.alt='Ping Identity'; return n; }
+    if(type==='Canvas') {
+      // Gemini Enterprise shows the opener card in the chat and renders the
+      // children in its side panel; the gallery stacks both for inspection.
+      n=el('div','pui-column'); const opener=el('div','pui-card');
+      opener.append(el('p','pui-h4',resolve(c.cardTitle)||'Interactive content'), el('p','pui-caption',(resolve(c.cardDescription)||'')+' (opens in the side panel)'));
+      const panel=el('div','pui-card'); for(const child of c.children||[]) panel.append(render(child));
+      n.append(opener,panel); return n;
+    }
+    if(type==='Icon') return el('span','pui-caption','['+(c.icon||c.name)+']');
+    if(type==='Divider') return el('hr');
+    if(type==='ExpansionPanel') {
+      n=el('details'); if(c.expanded) n.open=true;
+      const summary=el('summary','',(resolve(c.title)||'')+(c.description?': '+resolve(c.description):''));
+      n.append(summary); for(const child of c.children||[]) n.append(render(child)); return n;
+    }
+    if(['Column','Row','List','Card'].includes(type)) {
+      n=el('div',type==='Row'?'pui-row':type==='Card'?'pui-card':'pui-column');
+      for(const child of c.children || (c.child?[c.child]:[])) n.append(render(child)); return n;
+    }
+    if(type==='Table') {
+      n=el('div','pui-table-wrap'); const table=el('table'), head=el('thead'), tr=el('tr'), body=el('tbody');
+      if(c.caption) table.append(el('caption','',c.caption));
+      for(const col of c.columns) { const th=el('th','',col.header); th.scope='col'; tr.append(th); }
+      head.append(tr); table.append(head);
+      for(const row of resolve(c.rows)||[]) { const tr=el('tr'); for(const col of c.columns) tr.append(el('td','',row[col.field]??'')); body.append(tr); }
+      table.append(body); n.append(table); return n;
+    }
+    if(type==='Tabs') {
+      n=el('div'); const bar=el('div','pui-tabs'), body=el('div'); bar.role='tablist'; bar.ariaLabel=c.ariaLabel||'Result details';
+      c.tabs.forEach((tab,i)=>{
+        const b=el('button','',tab.label||tab.title); b.type='button'; b.role='tab'; b.id=`pui-${c.id}-tab${i}`;
+        b.setAttribute('aria-controls',`pui-${c.id}-panel`);
+        b.onclick=()=>{ for(const other of bar.children) other.setAttribute('aria-selected','false'); b.setAttribute('aria-selected','true');
+          body.id=`pui-${c.id}-panel`; body.role='tabpanel'; body.setAttribute('aria-labelledby',b.id); body.replaceChildren(render(tab.content||tab.child)); };
+        bar.append(b); if(i===0) b.click();
+      }); n.append(bar,body); return n;
+    }
+    if(type==='VegaChart') {
+      n=el('div','pui-chart'); n.role='img'; n.ariaLabel=resolve(c.spec).description;
+      const rows=resolve(c.spec)?.data?.values||[], max=Math.max(1,...rows.map(r=>r.count));
+      for(const row of rows) { const line=el('div','pui-bar-row'), track=el('div','pui-track'), bar=el('div','pui-bar');
+        bar.style.width=(100*row.count/max)+'%'; track.append(bar); line.append(el('span','',row.label),track,el('span','',row.count)); n.append(line); }
+      return n;
+    }
+    if(['Input','TextField','Select','ChoicePicker'].includes(type)) {
+      n=el('label','pui-field',resolve(c.label)); const choosing=['Select','ChoicePicker'].includes(type);
+      const field=el(choosing?'select':c.variant==='longText'?'textarea':'input');
+      if(choosing) for(const option of c.options) { const o=el('option','',option.label); o.value=option.value; field.append(o); }
+      else if(field.tagName==='INPUT') { field.type=c.type==='email'?'email':'text'; if(c.placeholder) field.placeholder=c.placeholder; }
+      const value=resolve(c.value); field.value=Array.isArray(value)?value[0]||'':value??'';
+      field.oninput=()=>update(c.value,type==='ChoicePicker'?[field.value]:field.value); n.append(field); return n;
+    }
+    if(['Checkbox','CheckBox'].includes(type)) {
+      n=el('label','pui-check'); const field=el('input'); field.type='checkbox'; const binding=c.checked||c.value;
+      field.checked=!!resolve(binding); field.onchange=()=>update(binding,field.checked); n.append(field,el('span','',c.label)); return n;
+    }
+    if(type==='IconButton') {
+      n=el('button',c.color==='warn'?'pui-danger':'',c.icon==='close'?'\u2715':'['+c.icon+']');
+      n.type='button'; n.title=c.tooltip||''; n.ariaLabel=c.ariaLabel||''; n.onclick=()=>action(c); return n;
+    }
+    if(type==='Button') {
+      n=el('button',(c.appearance==='filled'||c.variant==='primary'?'pui-primary ':'')+(c.color==='warn'?'pui-danger':''),c.label||resolve(components[c.child]?.text));
+      n.type='button'; if(c.tooltip) n.title=c.tooltip;
+      // A button without an action is a hoverable label, as in the named lists.
+      if(c.action) n.onclick=()=>action(c); else n.style.cssText='border:0;background:none;padding:0 12px;cursor:default;font-weight:600';
+      return n;
+    }
+    if(type==='ProgressBar') { n=el('progress'); n.ariaLabel='Working on your request'; return n; }
+    return el('p','pui-caption',type+' preview unavailable');
+  }
+  for(const name of Object.keys(galleries)) { const o=el('option','',name); catalogPicker.append(o); }
+  for(const name of Object.keys(galleries[catalog]||{})) { const o=el('option','',name); viewPicker.append(o); }
+  catalogPicker.onchange=()=>{ catalog=catalogPicker.value; show(scenario); };
+  viewPicker.onchange=()=>show(viewPicker.value);
+  if(catalog) show(scenario);
+  if(globalThis.Tweak) {
+    const settings={spacing:16};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--pui-space',settings.spacing+'px')});
+    tweak.addSlider(settings,'spacing',{label:'Card spacing',min:12,max:24,step:2,unit:'px'});
+  }
+})();
+</script>

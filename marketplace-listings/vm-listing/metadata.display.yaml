@@ -1,0 +1,134 @@
+# Copyright 2026 Ping Identity
+#
+# Marketplace deployment-page UI configuration.
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: pingone-aic-administrator-display
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  ui:
+    input:
+      variables:
+        project_id:
+          name: project_id
+          title: Project ID
+          invisible: true
+        goog_cm_deployment_name:
+          name: goog_cm_deployment_name
+          title: Deployment Name
+          invisible: true
+        source_image:
+          name: source_image
+          title: Image version
+          invisible: true
+          xGoogleProperty:
+            type: ET_GCE_DISK_IMAGE
+          enumValueLabels:
+            - label: pingone-aic-administrator-agent-image
+              value: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image
+        agent_engine_name:
+          name: agent_engine_name
+          title: Agent Name
+          tooltip: The name of your agent application in Vertex AI Agent Engine.
+        region:
+          name: region
+          title: Region
+          tooltip: The Google Cloud region to deploy to.
+          xGoogleProperty:
+            type: ET_GCE_REGION
+        ping_base_url:
+          name: ping_base_url
+          title: PingOne Advanced Identity Cloud URL
+          tooltip: Your tenant base URL, e.g. https://openam-<tenant>.forgeblocks.com
+        ping_realm:
+          name: ping_realm
+          title: Realm
+          tooltip: The realm to administer (e.g. alpha).
+        ping_scopes:
+          name: ping_scopes
+          title: OAuth2 Scopes
+          tooltip: Space-separated scopes the agent requests from your tenant.
+        ping_audit_username_field:
+          name: ping_audit_username_field
+          title: Audit Username Field
+          tooltip: JSON-pointer path holding the username in audit events (/payload/principal works for most tenants).
+        ping_service_account_id_secret:
+          name: ping_service_account_id_secret
+          title: Service Account ID Secret
+          tooltip: Secret Manager secret ID containing the PingAIC service-account ID (create it before deploying).
+        ping_private_jwk_secret:
+          name: ping_private_jwk_secret
+          title: Private JWK Secret
+          tooltip: Secret Manager secret ID containing the matching private RSA JWK as JSON.
+        ping_audit_api_key_secret:
+          name: ping_audit_api_key_secret
+          title: Audit API Key Secret
+          tooltip: Secret Manager secret ID containing the monitoring API key.
+        ping_audit_api_secret_secret:
+          name: ping_audit_api_secret_secret
+          title: Audit API Secret Secret
+          tooltip: Secret Manager secret ID containing the monitoring API secret.
+        agent_model:
+          name: agent_model
+          title: Agent Model
+          tooltip: The Gemini model the agent uses (default gemini-3.5-flash).
+        agent_model_location:
+          name: agent_model_location
+          title: Model Location
+          tooltip: Model processing location (global, us, or eu).
+        ping_logo_url:
+          name: ping_logo_url
+          title: Logo URL
+          tooltip: HTTPS URL of the Ping Identity logo PNG for the card and panel.
+        ping_canvas_logo:
+          name: ping_canvas_logo
+          title: Show logo in workspace
+          tooltip: Display the Ping Identity logo at the top of the Gemini Enterprise panel.
+        min_instances:
+          name: min_instances
+          title: Always-on instances
+          tooltip: "1 keeps one instance warm (no cold start, small always-on cost); 0 scales to zero."
+        ping_token_url:
+          name: ping_token_url
+          title: Token URL Override
+          tooltip: OAuth2 token endpoint override for the PingAIC tenant. Leave empty to derive it from the base URL.
+          invisible: true
+        agent_package_name:
+          name: agent_package_name
+          title: Agent Package Name
+          invisible: true
+        zone:
+          name: zone
+          title: Zone
+          invisible: true
+        machine_type:
+          name: machine_type
+          title: Machine Type
+          invisible: true
+        boot_disk_size:
+          name: boot_disk_size
+          title: Boot Disk Size
+          invisible: true
+        boot_disk_type:
+          name: boot_disk_type
+          title: Boot Disk Type
+          invisible: true
+        network:
+          name: network
+          title: VPC Network
+          tooltip: The VPC network for the validation instance. Choose a network that exists in the deploying project.
+          xGoogleProperty:
+            type: ET_GCE_NETWORK
+            gceNetwork:
+              machineTypeVariable: machine_type
+        subnetwork:
+          name: subnetwork
+          title: Subnetwork
+          tooltip: The subnetwork for the validation instance. Leave empty to use the network's default subnet in the instance's zone.
+          xGoogleProperty:
+            type: ET_GCE_SUBNETWORK
+            gceSubnetwork:
+              networkVariable: network

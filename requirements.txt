@@ -1,0 +1,12 @@
+# Tested together: A2A 1.x core with the SDK's real 0.3 wire adapters.
+google-adk[a2a]==2.8.0
+google-cloud-aiplatform[adk,agent_engines]==2.1.0
+google-genai==2.22.0
+a2a-sdk[http-server]==1.1.2
+google-cloud-secret-manager==2.30.0
+jsonschema==4.26.0
+httpx==0.28.1
+PyJWT[crypto]==2.13.0
+pydantic==2.13.5
+python-dotenv==1.2.3
+cloudpickle==3.1.2

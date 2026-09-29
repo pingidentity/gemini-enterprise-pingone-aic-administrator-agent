@@ -1,0 +1,134 @@
+# Copyright 2026 Ping Identity
+#
+# Solution metadata for the Marketplace deployment package.
+# Generated with `cft blueprint metadata` (Google's CFT CLI) and extended by
+# hand: the deployment page renders the intersection of these interfaces with
+# metadata.display.yaml entries, so every Terraform variable MUST be declared
+# here; variables missing from this list never appear on the deployment page
+# (root cause of the empty-variables page, 2026-09-28).
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: BlueprintMetadata
+metadata:
+  name: pingone-aic-administrator
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  info:
+    title: PingOne AIC Administrator Agent
+    version: 1.0.4
+    actuationTool:
+      flavor: Terraform
+      version: ">= 1.5.7"
+    description: {}
+    softwareGroups:
+      - type: SG_OS
+        software:
+          - title: Debian
+            version: "12"
+  content: {}
+  interfaces:
+    variables:
+      - name: project_id
+        description: The ID of the project in which to provision resources. Leave empty to deploy into the authenticated credentials' project (Marketplace injects the customer's project on real deployments).
+        varType: string
+      - name: goog_cm_deployment_name
+        description: The name of the deployment, used to avoid resource name collisions.
+        varType: string
+        defaultValue: pingaic-deployment
+      - name: agent_engine_name
+        description: The name of the Agent Engine application.
+        varType: string
+        defaultValue: pingone-aic-administrator
+      - name: region
+        description: The GCP region to deploy to.
+        varType: string
+        defaultValue: us-central1
+      - name: agent_package_name
+        description: The name of the Python package in the source archive.
+        varType: string
+        defaultValue: ping_admin_agent
+      - name: ping_base_url
+        description: Base URL of the customer's PingOne Advanced Identity Cloud tenant, e.g. https://openam-<tenant>.forgeblocks.com.
+        varType: string
+        defaultValue: https://openam-placeholder.forgeblocks.com
+      - name: ping_realm
+        description: The PingOne Advanced Identity Cloud realm to administer, e.g. alpha.
+        varType: string
+        defaultValue: alpha
+      - name: ping_scopes
+        description: OAuth2 scopes the agent requests from the tenant, space-separated.
+        varType: string
+        defaultValue: "fr:idm:* fr:am:*"
+      - name: ping_audit_username_field
+        description: Audit event JSON-pointer path holding the username, e.g. /payload/principal. Leave empty to disable username filtering.
+        varType: string
+        defaultValue: /payload/principal
+      - name: ping_service_account_id_secret
+        description: Secret Manager secret ID containing the PingAIC service-account ID.
+        varType: string
+        defaultValue: pingaic-service-account-id
+      - name: ping_private_jwk_secret
+        description: Secret Manager secret ID containing the matching private RSA JWK as JSON.
+        varType: string
+        defaultValue: pingaic-private-jwk
+      - name: ping_audit_api_key_secret
+        description: Secret Manager secret ID containing the monitoring API key.
+        varType: string
+        defaultValue: pingaic-audit-api-key
+      - name: ping_audit_api_secret_secret
+        description: Secret Manager secret ID containing the monitoring API secret.
+        varType: string
+        defaultValue: pingaic-audit-api-secret
+      - name: ping_token_url
+        description: OAuth2 token endpoint override for the PingAIC tenant. Leave empty to derive it from the base URL.
+        varType: string
+        defaultValue: ""
+      - name: agent_model
+        description: The Gemini model the agent uses.
+        varType: string
+        defaultValue: gemini-3.5-flash
+      - name: agent_model_location
+        description: The location for model requests, e.g. global or us.
+        varType: string
+        defaultValue: global
+      - name: ping_logo_url
+        description: HTTPS URL of the Ping Identity logo PNG used on the card and panel.
+        varType: string
+        defaultValue: https://storage.googleapis.com/tech-partner-ping-public-branding/ping-logo-square-1251.png
+      - name: ping_canvas_logo
+        description: Show the logo at the top of the Gemini Enterprise workspace panel.
+        varType: boolean
+        defaultValue: true
+      - name: min_instances
+        description: Minimum Agent Engine instances kept warm. 1 avoids a cold start on the first prompt after idle (small always-on cost); 0 scales to zero.
+        varType: integer
+        defaultValue: 1
+      - name: zone
+        description: The GCP zone for the validation compute instance.
+        varType: string
+        defaultValue: us-central1-a
+      - name: machine_type
+        description: Machine type for the validation compute instance.
+        varType: string
+        defaultValue: e2-small
+      - name: boot_disk_size
+        description: Size of the boot disk in GB.
+        varType: integer
+        defaultValue: 10
+      - name: boot_disk_type
+        description: Type of the boot disk.
+        varType: string
+        defaultValue: pd-balanced
+      - name: source_image
+        description: Source image for the validation compute instance.
+        varType: string
+        defaultValue: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image
+      - name: network
+        description: The VPC network to attach the validation instance to.
+        varType: string
+        defaultValue: default
+      - name: subnetwork
+        description: The subnetwork to attach the validation instance to, by name or self-link. Leave empty to use the network's default subnet in the instance's zone.
+        varType: string
+        defaultValue: ""

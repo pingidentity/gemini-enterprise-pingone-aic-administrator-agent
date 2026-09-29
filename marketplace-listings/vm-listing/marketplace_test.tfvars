@@ -1,0 +1,6 @@
+goog_cm_deployment_name = "pingaic-test"
+ping_base_url = "https://openam-example.forgeblocks.com"
+ping_service_account_id_secret = "pingaic-service-account-id"
+ping_private_jwk_secret = "pingaic-private-jwk"
+ping_audit_api_key_secret = "pingaic-audit-api-key"
+ping_audit_api_secret_secret = "pingaic-audit-api-secret"
