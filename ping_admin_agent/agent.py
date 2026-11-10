@@ -573,7 +573,16 @@ def _membership_ref(kind: str, membership_id: str) -> str | None:
         if kind == "groups"
         else ("internal/role", cfg.managed_role_path)
     )
-    value = membership_id.strip().strip("/")
+    return _scoped_ref(membership_id, allowed)
+
+
+def _scoped_ref(identifier: str, allowed: tuple[str, ...]) -> str | None:
+    """An IDM reference under one of `allowed`, or None if unsafe.
+
+    A bare ID means the first allowed collection. A full reference is accepted
+    only under one of the allowed collections.
+    """
+    value = identifier.strip().strip("/")
     collection, _, record = value.rpartition("/")
     if not record or any(c in record for c in "\\?#%") or record in {".", ".."}:
         return None
@@ -683,22 +692,34 @@ def change_user_assignment(
         return _err("assignment_id is required.")
     if action not in ("grant", "revoke"):
         return _err("action must be 'grant' or 'revoke'.")
+    from .config import get_config
+
+    reference = _scoped_ref(assignment_id, (get_config().managed_assignment_path,))
+    if reference is None:
+        return _err("assignment_id must be the ID of a managed assignment.")
     refusal = _require_confirm(
         f"{action} assignment {assignment_id!r} for user {user_id!r}", confirm
     )
     if refusal:
         return refusal
-    from .config import get_config
-
-    cfg = get_config()
-    patch_op = "add" if action == "grant" else "remove"
-    op = {
-        "operation": patch_op,
-        "field": "/assignments/-" if action == "grant" else "/assignments",
-        "value": {"_ref": f"{cfg.managed_assignment_path}/{assignment_id.strip()}"},
-    }
     try:
-        return _ok(get_client().patch_user(user_id.strip(), [op]))
+        client = get_client()
+        if action == "grant":
+            op = {"operation": "add", "field": "/assignments/-", "value": {"_ref": reference}}
+            return _ok(client.patch_user(user_id.strip(), [op]))
+        # As for memberships: a PATCH remove must repeat the entire stored
+        # object, so delete the relationship by the reference ID IDM gave it.
+        held = client.list_user_relationship(user_id.strip(), "assignments").get("result")
+        matches = [
+            row
+            for row in (held if isinstance(held, list) else [])
+            if isinstance(row, dict) and row.get("_ref") == reference and row.get("_id")
+        ]
+        if not matches:
+            return _err("This user does not have that assignment; nothing was removed.")
+        return _ok(
+            client.delete_user_relationship(user_id.strip(), "assignments", matches[0]["_id"])
+        )
     except PingError as exc:
         return _err(str(exc))
 

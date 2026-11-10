@@ -105,7 +105,7 @@ spec:
         varType: integer
         defaultValue: 1
       - name: zone
-        description: The GCP zone for the validation compute instance.
+        description: The GCP zone for the validation compute instance. A zone outside the deployment region is replaced by one inside it.
         varType: string
         defaultValue: us-central1-a
       - name: machine_type

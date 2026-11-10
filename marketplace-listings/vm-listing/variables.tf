@@ -73,24 +73,44 @@ variable "ping_service_account_id_secret" {
   description = "Secret Manager secret ID containing the PingAIC service-account ID."
   type        = string
   default     = "pingaic-service-account-id"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]{1,255}$", var.ping_service_account_id_secret))
+    error_message = "Enter the secret ID (letters, digits, - and _), not a resource path or a value."
+  }
 }
 
 variable "ping_private_jwk_secret" {
   description = "Secret Manager secret ID containing the matching private RSA JWK as JSON."
   type        = string
   default     = "pingaic-private-jwk"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]{1,255}$", var.ping_private_jwk_secret))
+    error_message = "Enter the secret ID (letters, digits, - and _), not a resource path or a value."
+  }
 }
 
 variable "ping_audit_api_key_secret" {
   description = "Secret Manager secret ID containing the monitoring API key."
   type        = string
   default     = "pingaic-audit-api-key"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]{1,255}$", var.ping_audit_api_key_secret))
+    error_message = "Enter the secret ID (letters, digits, - and _), not a resource path or a value."
+  }
 }
 
 variable "ping_audit_api_secret_secret" {
   description = "Secret Manager secret ID containing the monitoring API secret."
   type        = string
   default     = "pingaic-audit-api-secret"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]{1,255}$", var.ping_audit_api_secret_secret))
+    error_message = "Enter the secret ID (letters, digits, - and _), not a resource path or a value."
+  }
 }
 
 variable "ping_token_url" {
@@ -132,7 +152,7 @@ variable "min_instances" {
 
 # Compute instance (Marketplace validation requires a VM in the package)
 variable "zone" {
-  description = "The GCP zone for the validation compute instance."
+  description = "The GCP zone for the validation compute instance. A zone outside the deployment region is replaced by one inside it."
   type        = string
   default     = "us-central1-a"
 }

@@ -12,3 +12,8 @@ __pycache__/
 .terraform/
 *.tfstate
 *.tfstate.*
+
+# Marketplace package build outputs: marketplace-listings/vm-listing/build_package.sh
+marketplace-listings/vm-listing/assets/source.tar.gz
+marketplace-listings/vm-listing/pingone-aic-administrator-agent*.zip
+marketplace-listings/vm-listing/temp_package/
