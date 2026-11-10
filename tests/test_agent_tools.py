@@ -441,6 +441,63 @@ def test_change_membership_touches_nothing_until_confirmed(fake_client):
     fake_client.delete_user_relationship.assert_not_called()
 
 
+def test_grant_assignment_appends_a_reference(fake_client):
+    fake_client.patch_user.return_value = {"_id": "u1"}
+    result = agent_mod.change_user_assignment("u1", "a1", "grant", confirm=True)
+    assert result["status"] == "success"
+    (op,) = fake_client.patch_user.call_args.args[1]
+    assert op == {
+        "operation": "add",
+        "field": "/assignments/-",
+        "value": {"_ref": "managed/alpha_assignment/a1"},
+    }
+
+
+def test_revoke_assignment_removes_the_relationship_by_its_reference_id(fake_client):
+    fake_client.list_user_relationship.return_value = {
+        "result": [
+            {"_id": "rel-1", "_ref": "managed/alpha_assignment/a1", "_refResourceId": "a1"},
+            {"_id": "rel-2", "_ref": "managed/alpha_assignment/a2", "_refResourceId": "a2"},
+        ]
+    }
+    fake_client.delete_user_relationship.return_value = {"_id": "rel-2"}
+    result = agent_mod.change_user_assignment("u1", "a2", "revoke", confirm=True)
+    assert result["status"] == "success"
+    fake_client.list_user_relationship.assert_called_once_with("u1", "assignments")
+    # Not a PATCH remove: IDM ignores one that does not repeat the whole object.
+    fake_client.delete_user_relationship.assert_called_once_with("u1", "assignments", "rel-2")
+    fake_client.patch_user.assert_not_called()
+
+
+def test_revoke_assignment_does_not_remove_what_the_user_does_not_hold(fake_client):
+    fake_client.list_user_relationship.return_value = {
+        "result": [{"_id": "rel-1", "_ref": "managed/alpha_assignment/a1"}]
+    }
+    result = agent_mod.change_user_assignment("u1", "a9", "revoke", confirm=True)
+    assert result["status"] == "error" and "nothing was removed" in result["message"]
+    fake_client.delete_user_relationship.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "assignment_id",
+    ["../u2", "a1?_action=x", "managed/alpha_group/g1", "managed/alpha_assignment/", "."],
+)
+def test_change_assignment_refuses_an_unsafe_or_foreign_reference(fake_client, assignment_id):
+    for action in ("grant", "revoke"):
+        result = agent_mod.change_user_assignment("u1", assignment_id, action, confirm=True)
+        assert result["status"] == "error"
+    fake_client.patch_user.assert_not_called()
+    fake_client.list_user_relationship.assert_not_called()
+    fake_client.delete_user_relationship.assert_not_called()
+
+
+def test_revoke_assignment_touches_nothing_until_confirmed(fake_client):
+    result = agent_mod.change_user_assignment("u1", "a1", "revoke")
+    assert result["status"] == "error"
+    fake_client.list_user_relationship.assert_not_called()
+    fake_client.delete_user_relationship.assert_not_called()
+
+
 def test_unenroll_mfa_deletes_each_device(fake_client):
     fake_client.list_user_devices.return_value = {
         "result": [{"uuid": "d1"}, {"uuid": "d2"}]

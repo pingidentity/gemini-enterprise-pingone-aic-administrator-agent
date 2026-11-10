@@ -49,12 +49,15 @@ Advanced Identity Cloud tenant. Names are yours to choose (the examples below
 work); you will enter each name on the deployment page.
 
 ```bash
-gcloud services enable secretmanager.googleapis.com
+PROJECT_ID="your-project-id"
+gcloud services enable secretmanager.googleapis.com --project="$PROJECT_ID"
 
-printf '%s' "<service-account-id>" | gcloud secrets create pingaic-service-account-id --data-file=-
-printf '%s' "<private-jwk-json>"   | gcloud secrets create pingaic-private-jwk --data-file=-
-printf '%s' "<audit-api-key>"      | gcloud secrets create pingaic-audit-api-key --data-file=-
-printf '%s' "<audit-api-secret>"   | gcloud secrets create pingaic-audit-api-secret --data-file=-
+# The private JWK file downloaded from your tenant; delete the file afterwards.
+gcloud secrets create pingaic-private-jwk --project="$PROJECT_ID" --data-file=private-jwk.json
+printf '%s' "<service-account-id>" | gcloud secrets create pingaic-service-account-id --project="$PROJECT_ID" --data-file=-
+# Paste each monitoring credential at the prompt; it is not echoed or kept in shell history.
+read -rs VALUE && printf '%s' "$VALUE" | gcloud secrets create pingaic-audit-api-key --project="$PROJECT_ID" --data-file=-; unset VALUE
+read -rs VALUE && printf '%s' "$VALUE" | gcloud secrets create pingaic-audit-api-secret --project="$PROJECT_ID" --data-file=-; unset VALUE
 ```
 
 | Secret | Contains |
@@ -63,6 +66,10 @@ printf '%s' "<audit-api-secret>"   | gcloud secrets create pingaic-audit-api-sec
 | Private JWK | The matching private RSA JWK, as JSON |
 | Audit API key | Monitoring API key |
 | Audit API secret | Monitoring API secret |
+
+The deployment lets its runtime identity read these four secrets and no
+others. The agent loads them when it first calls your tenant, so after
+changing a secret's value, redeploy the agent to load the new value.
 
 ### Step 2: Deploy from Google Cloud Marketplace
 

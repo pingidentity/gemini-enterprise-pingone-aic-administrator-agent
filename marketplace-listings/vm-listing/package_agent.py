@@ -42,7 +42,7 @@ def main():
             source_path,
             pkg_dir,
             ignore=shutil.ignore_patterns(
-                "__pycache__", "*.pyc", ".git", ".venv", ".idea", ".vscode",
+                "__pycache__", "*.pyc", ".git", ".venv", ".idea", ".vscode", ".DS_Store",
                 "tests", "test", "deployment", "marketplace", "logos",
                 "schemas", "docs", "*.md",
             ),

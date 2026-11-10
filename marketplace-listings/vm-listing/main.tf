@@ -16,6 +16,9 @@ terraform {
     google = {
       source = "hashicorp/google"
     }
+    time = {
+      source = "hashicorp/time"
+    }
   }
 }
 
@@ -44,15 +47,17 @@ locals {
     try(var.project_id, null),
     try(data.google_client_config.deployer.project, null)
   )
-  # The runtime identity needs to read exactly these secrets; the customer
-  # creates them with the values from their PingOne Advanced Identity Cloud
-  # tenant before deploying.
-  secret_accessors = [
-    var.ping_service_account_id_secret,
-    var.ping_private_jwk_secret,
-    var.ping_audit_api_key_secret,
-    var.ping_audit_api_secret_secret,
-  ]
+  # The secrets the customer creates with the values from their PingOne
+  # Advanced Identity Cloud tenant. The runtime receives only their version
+  # resource names and reads the payloads itself, with its own identity, when
+  # it first calls the tenant: no payload is part of the engine's
+  # configuration, and the runtime identity may read exactly these secrets.
+  secret_ids = {
+    PING_ADMIN_SERVICE_ACCOUNT_ID_SECRET = var.ping_service_account_id_secret
+    PING_ADMIN_PRIVATE_JWK_SECRET        = var.ping_private_jwk_secret
+    PING_ADMIN_AUDIT_API_KEY_SECRET      = var.ping_audit_api_key_secret
+    PING_ADMIN_AUDIT_API_SECRET_SECRET   = var.ping_audit_api_secret_secret
+  }
   runtime_env = {
     PING_BASE_URL                    = var.ping_base_url
     PING_REALM                       = var.ping_realm
@@ -95,35 +100,27 @@ module "agent_engine" {
     # deployment); the embedded card is the packaging-time card the runtime
     # rewrites at set_up.
     class_methods = jsondecode(file("assets/class_methods.json"))
+    # Secret references, not payloads: the same contract as the SDK
+    # deployer (deployment/deploy.py). Agent Engine's secret_env would
+    # instead read the secrets with Google's Reasoning Engine service agent,
+    # which this deployment does not grant.
     environment_variables = merge(local.runtime_env_complete, {
       PROJECT_ID                = local.project_id
       LOCATION                  = var.region
       GOOGLE_GENAI_USE_VERTEXAI = "1"
+      }, {
+      for name, secret in local.secret_ids :
+      name => "projects/${local.project_id}/secrets/${secret}/versions/latest"
     })
-    # Agent Engine delivers each secret's PAYLOAD as the environment
-    # variable's value. The config reads the plaintext names directly, so
-    # inject under those names; the *_SECRET spellings are for resource-name
-    # references, which Agent Engine does not provide here.
-    secret_environment_variables = {
-      PING_ADMIN_SERVICE_ACCOUNT_ID = { secret_id = var.ping_service_account_id_secret }
-      PING_ADMIN_PRIVATE_JWK        = { secret_id = var.ping_private_jwk_secret }
-      PING_ADMIN_AUDIT_API_KEY      = { secret_id = var.ping_audit_api_key_secret }
-      PING_ADMIN_AUDIT_API_SECRET   = { secret_id = var.ping_audit_api_secret_secret }
-    }
     min_instances = var.min_instances
     max_instances = 1
   }
 
+  # The runtime identity and its grants are created below, outside the
+  # module, so that the engine is created only after they are in effect.
   service_account_config = {
-    create = true
-    name   = substr("${var.goog_cm_deployment_name}-agent", 0, 30)
-    roles = [
-      "roles/aiplatform.user",
-      "roles/storage.objectViewer",
-      "roles/serviceusage.serviceUsageConsumer",
-      "roles/cloudtrace.agent",
-      "roles/secretmanager.secretAccessor",
-    ]
+    create = false
+    email  = google_service_account.runtime.email
   }
 
   deployment_files = {
@@ -137,32 +134,114 @@ module "agent_engine" {
       requirements_path = "${var.agent_package_name}/requirements.txt"
     }
   }
+
+  # Agent Engine does not retry a deployment whose identity's bindings are
+  # not yet in effect, so the engine waits for them.
+  depends_on = [time_sleep.runtime_iam]
 }
 
-# 2. Secret-level access for the runtime identity. Google's
-# secret_environment_variables wiring grants the accessor on the referenced
-# secrets itself, so this extra grant is opt-in: enable it only for
-# deployments that keep their secrets otherwise restricted (the secret must
-# already exist, and the deployer's identity needs secretmanager.admin to
-# set its IAM policy).
-variable "manage_secret_iam" {
-  description = "Grant the runtime identity secretAccessor on the referenced secrets. Enable only when the secrets exist and are otherwise restricted; Google's secret_environment_variables wiring already grants access."
-  type        = bool
-  default     = false
+# 2. Runtime identity and its access.
+# Service account IDs hold at most 30 characters. A deployment name of up to
+# 28 keeps the IDs earlier versions created. A longer one would truncate to
+# the same ID for both accounts, so it is shortened with a hash of the full
+# name instead.
+locals {
+  sa_name_base  = replace(var.goog_cm_deployment_name, "_", "-")
+  sa_name_short = length(local.sa_name_base) <= 28
+  sa_name_long  = "${substr(local.sa_name_base, 0, 16)}-${substr(sha256(var.goog_cm_deployment_name), 0, 6)}"
+  runtime_sa_id = (
+    local.sa_name_short
+    ? substr("${local.sa_name_base}-agent", 0, 30)
+    : "${local.sa_name_long}-agent"
+  )
+  validation_sa_id = (
+    local.sa_name_short
+    ? substr("${local.sa_name_base}-vm", 0, 30)
+    : "${local.sa_name_long}-vm"
+  )
 }
 
-resource "google_secret_manager_secret_iam_member" "runtime_accessor" {
-  for_each = var.manage_secret_iam ? toset([
-    var.ping_service_account_id_secret,
-    var.ping_private_jwk_secret,
-    var.ping_audit_api_key_secret,
-    var.ping_audit_api_secret_secret,
-  ]) : toset([])
-  # The secret must exist before the binding; customers create the secrets
-  # before deploying (see README).
-  secret_id = "projects/${local.project_id}/secrets/${each.key}"
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${module.agent_engine.service_account.email}"
+resource "google_service_account" "runtime" {
+  project      = local.project_id
+  account_id   = local.runtime_sa_id
+  display_name = substr("${var.goog_cm_deployment_name}-agent", 0, 30)
+}
+
+locals {
+  runtime_roles = [
+    "roles/aiplatform.user",
+    "roles/storage.objectViewer",
+    "roles/serviceusage.serviceUsageConsumer",
+    "roles/cloudtrace.agent",
+  ]
+}
+
+resource "google_project_iam_member" "runtime" {
+  for_each = toset(local.runtime_roles)
+  project  = local.project_id
+  role     = each.key
+  member   = google_service_account.runtime.member
+}
+
+data "google_project" "runtime" {
+  project_id = local.project_id
+}
+
+# Secret access is limited to the four secrets named on the deployment page.
+# A conditional project binding, rather than one binding per secret, works
+# whether or not the secrets exist yet and needs no Secret Manager admin
+# rights. Secret Manager resource names in conditions carry the project
+# number; the ID never matches.
+resource "google_project_iam_member" "runtime_secret_access" {
+  project = local.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = google_service_account.runtime.member
+
+  condition {
+    title       = "pingaic-agent-secrets"
+    description = "Only the PingOne AIC secrets named on the deployment."
+    expression = join(" || ", [
+      for secret in sort(distinct(values(local.secret_ids))) :
+      "resource.name.startsWith(\"projects/${data.google_project.runtime.number}/secrets/${secret}/\")"
+    ])
+  }
+}
+
+resource "time_sleep" "runtime_iam" {
+  create_duration = "2m"
+
+  depends_on = [
+    google_project_iam_member.runtime,
+    google_project_iam_member.runtime_secret_access,
+  ]
+}
+
+# Earlier versions of this package created the runtime identity inside the
+# module. Carry an existing deployment's identity and grants over instead of
+# replacing them; its unconditional, project-wide secret access is removed.
+moved {
+  from = module.agent_engine.google_service_account.service_account[0]
+  to   = google_service_account.runtime
+}
+
+moved {
+  from = module.agent_engine.google_project_iam_member.default["roles/aiplatform.user"]
+  to   = google_project_iam_member.runtime["roles/aiplatform.user"]
+}
+
+moved {
+  from = module.agent_engine.google_project_iam_member.default["roles/storage.objectViewer"]
+  to   = google_project_iam_member.runtime["roles/storage.objectViewer"]
+}
+
+moved {
+  from = module.agent_engine.google_project_iam_member.default["roles/serviceusage.serviceUsageConsumer"]
+  to   = google_project_iam_member.runtime["roles/serviceusage.serviceUsageConsumer"]
+}
+
+moved {
+  from = module.agent_engine.google_project_iam_member.default["roles/cloudtrace.agent"]
+  to   = google_project_iam_member.runtime["roles/cloudtrace.agent"]
 }
 
 # 3. Compute instance: Marketplace validation currently requires a VM in the
@@ -181,6 +260,21 @@ locals {
   use_created_network = (
     var.network == null || var.network == "" || var.network == "default"
   )
+  # The instance must sit in the deployment region, where its subnet is
+  # created: a zone outside that region is replaced by one inside it.
+  zone_in_region = startswith(coalesce(var.zone, "-"), "${var.region}-")
+  zone = (
+    local.zone_in_region
+    ? var.zone
+    : sort(data.google_compute_zones.region[0].names)[0]
+  )
+}
+
+data "google_compute_zones" "region" {
+  count   = local.zone_in_region ? 0 : 1
+  project = local.project_id
+  region  = var.region
+  status  = "UP"
 }
 
 resource "google_compute_network" "validation" {
@@ -203,7 +297,7 @@ resource "google_compute_subnetwork" "validation" {
 resource "google_compute_instance" "instance" {
   name         = "${var.goog_cm_deployment_name}-vm"
   machine_type = var.machine_type
-  zone         = var.zone
+  zone         = local.zone
 
   tags = ["${var.goog_cm_deployment_name}-deployment"]
 
@@ -244,6 +338,6 @@ resource "google_compute_instance" "instance" {
 }
 
 resource "google_service_account" "validation_vm" {
-  account_id   = substr("${var.goog_cm_deployment_name}-vm", 0, 30)
+  account_id   = local.validation_sa_id
   display_name = "Marketplace validation instance"
 }

@@ -27,10 +27,12 @@ exists, Product details → Product metadata → turn **Product searchable** OFF
 request). This is the listing whose Deployment Package is the Terraform zip
 that deploys Agent Engine into the customer's project.
 
-- **Deployment package:** `vm-listing/pingone-aic-administrator-agent.zip`
-  (source tar built by `vm-listing/package_agent.py`; rebuild with
-  `python3 package_agent.py --source <agent source> --output assets/source.tar.gz`,
-  then re-zip the listed files).
+- **Deployment package:** `vm-listing/pingone-aic-administrator-agent.zip`,
+  built from the current agent source by `vm-listing/build_package.sh`. The
+  zip and `assets/source.tar.gz` are build outputs, not committed: build
+  them for every upload, and before running the Terraform from a checkout.
+  `assets/class_methods.json` stays committed; regenerate it from a working
+  SDK deployment when the agent's A2A methods or card change.
 - **Upload:** GCS bucket in the Marketplace product's project, selected in
   Producer Portal → Deployment package (manual configuration, custom UI
   deployment, `source_image` variable, the 7 required roles).
@@ -43,6 +45,7 @@ that deploys Agent Engine into the customer's project.
   portal at it:
 
   ```bash
+  vm-listing/build_package.sh
   gcloud storage cp vm-listing/pingone-aic-administrator-agent.zip \
     "gs://gemini-enterprise-agent-pingone-aic-administrator/deployment/pingone-aic-administrator-agent-v<VERSION>-<N>.zip"
   gcloud storage objects update \
@@ -55,7 +58,9 @@ that deploys Agent Engine into the customer's project.
   exempt from the org policy that blocks IAM bindings for Google-side
   principals. Then update the package path in Producer Portal → Deployment
   package and re-validate. Current object:
-  `deployment/pingone-aic-administrator-agent-v1.0.4-3.zip`.
+  `deployment/pingone-aic-administrator-agent-v1.0.4-3.zip`; the next upload
+  is `-v1.0.4-4.zip`. A changed package must be resubmitted for Google's
+  deployment package review.
 - **Validation:** requires the VM in the package (it is there, idle, not part
   of the serving path). Validate metadata with Google's CFT CLI before every
   upload (`go install github.com/GoogleCloudPlatform/cloud-foundation-toolkit/cli@latest`,

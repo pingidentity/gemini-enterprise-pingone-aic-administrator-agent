@@ -554,9 +554,9 @@ renderer, so validate appearance and action delivery there after deployment.
 | Unenroll MFA | `unenroll_mfa_device` | `DELETE /am/.../users/{id}/devices/2fa/...` |
 | List groups/roles | `list_user_groups` | `GET .../{id}/groups` |
 | List group members | `list_group_members` | `GET .../alpha_group/{id}/members` |
-| Add/remove group/role | `change_user_membership` | `PATCH .../{id}` |
+| Add/remove group/role | `change_user_membership` | `PATCH .../{id}` to add; `DELETE .../{id}/groups/{relationshipId}` (or `authzRoles`) to remove |
 | List assignments | `list_user_assignments` | `GET .../{id}/assignments` |
-| Grant/revoke assignment | `change_user_assignment` | `PATCH .../{id}` |
+| Grant/revoke assignment | `change_user_assignment` | `PATCH .../{id}` to grant; `DELETE .../{id}/assignments/{relationshipId}` to revoke |
 | Find application | `find_application` | `GET .../alpha_application?_queryFilter=...` |
 | Create OIDC client | `create_oidc_application` | `PUT /am/json/realms/root/realms/{realm}/realm-config/agents/OAuth2Client/{clientId}` |
 | Create SAML application record | `create_saml_application` | `POST /openidm/managed/alpha_application` (`Accept-API-Version: resource=1.0`) |

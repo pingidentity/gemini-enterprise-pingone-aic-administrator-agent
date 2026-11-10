@@ -16,7 +16,7 @@ output "agent_name" {
 
 output "service_account_email" {
   description = "The runtime identity the agent uses."
-  value       = module.agent_engine.service_account.email
+  value       = google_service_account.runtime.email
 }
 
 output "next_steps" {
