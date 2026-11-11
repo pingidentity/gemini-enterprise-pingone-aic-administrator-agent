@@ -27,8 +27,8 @@ spec:
           xGoogleProperty:
             type: ET_GCE_DISK_IMAGE
           enumValueLabels:
-            - label: pingone-aic-administrator-agent-image
-              value: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image
+            - label: pingone-aic-administrator-agent-image-v20261111
+              value: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image-v20261111
         agent_engine_name:
           name: agent_engine_name
           title: Agent Name
