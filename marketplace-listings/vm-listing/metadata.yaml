@@ -123,7 +123,7 @@ spec:
       - name: source_image
         description: Source image for the validation compute instance.
         varType: string
-        defaultValue: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image
+        defaultValue: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image-v20261111
       - name: network
         description: The VPC network to attach the validation instance to.
         varType: string

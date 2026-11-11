@@ -178,7 +178,7 @@ variable "boot_disk_type" {
 variable "source_image" {
   description = "Source image for the boot disk."
   type        = string
-  default     = "projects/forgerock-public/global/images/pingone-aic-administrator-agent-image"
+  default     = "projects/forgerock-public/global/images/pingone-aic-administrator-agent-image-v20261111"
 }
 
 variable "network" {
