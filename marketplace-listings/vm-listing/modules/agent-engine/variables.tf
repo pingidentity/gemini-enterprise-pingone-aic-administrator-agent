@@ -98,6 +98,12 @@ variable "deployment_files" {
   }
 }
 
+variable "deletion_policy" {
+  description = "Terraform deletion policy for the Agent Engine: FORCE also deletes its child resources (such as sessions), which otherwise block deletion. Null keeps the provider default."
+  type        = string
+  default     = null
+}
+
 variable "description" {
   description = "The Agent Engine description."
   type        = string

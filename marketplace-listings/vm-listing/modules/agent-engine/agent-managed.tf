@@ -15,11 +15,12 @@
  */
 
 resource "google_vertex_ai_reasoning_engine" "managed" {
-  count        = var.managed ? 1 : 0
-  display_name = var.name
-  project      = local.project_id
-  description  = var.description
-  region       = local.location
+  count           = var.managed ? 1 : 0
+  display_name    = var.name
+  project         = local.project_id
+  description     = var.description
+  region          = local.location
+  deletion_policy = var.deletion_policy
 
   dynamic "encryption_spec" {
     for_each = var.encryption_key == null ? {} : { 1 = 1 }

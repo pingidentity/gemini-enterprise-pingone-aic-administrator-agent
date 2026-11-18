@@ -30,6 +30,12 @@ There are two phases: **deploy from Marketplace** (provisions the agent in
 your Google Cloud project) and **register in Gemini Enterprise** (connects
 your Gemini Enterprise app to it). Each takes minutes; do them in order.
 
+**Deploying with Terraform instead of Marketplace:** follow the step-by-step
+guide in [`marketplace-listings/vm-listing/README.md`](marketplace-listings/vm-listing/README.md).
+It ships as `README.md` in the deployment package zip and covers the whole
+path, from secrets through `terraform apply` to registration, first use and
+removal.
+
 ### Step 0: Before you deploy
 
 1. **A PingOne Advanced Identity Cloud tenant** with administrative access,
@@ -117,17 +123,22 @@ output. If the request returns 403, grant yourself
 
 ### Step 4: Create the Gemini Enterprise OAuth authorization
 
-Gemini Enterprise calls the runtime with each operator's Google token. One
-time per Gemini Enterprise project:
+Gemini Enterprise calls the runtime with each operator's Google token. Each
+agent registration needs its **own** authorization: one already attached to
+another agent is rejected with "is used by another agent".
 
-1. Create a Google OAuth client: an **Internal** consent screen with the
+1. Create a new Google OAuth client in the Gemini Enterprise project: an
+   **Internal** consent screen with the
    `https://www.googleapis.com/auth/cloud-platform` scope, and a **Web
-   application** client whose authorized redirect URI is exactly
-   `https://vertexaisearch.cloud.google.com/oauth-redirect`.
-2. Create the authorization resource in the Gemini Enterprise project (full
-   copy-paste commands are in the deployment bundle's `REGISTRATION.md`).
-3. Export the client secret as `OAUTH_CLIENT_SECRET` in your shell, never
-   in a file or log.
+   application** client with both authorized redirect URIs
+   `https://vertexaisearch.cloud.google.com/oauth-redirect` and
+   `https://vertexaisearch.cloud.google.com/static/oauth/oauth.html`.
+2. Create the authorization resource in the Gemini Enterprise project; its
+   authorization URL uses the `…/oauth-redirect` address. The copy-paste
+   command is step 8 of the
+   [deployment guide](marketplace-listings/vm-listing/README.md#step-8-create-the-oauth-authorization).
+3. Keep the client secret in your shell only (`read -s`), never in a file or
+   log.
 
 ### Step 5: Register the agent in Gemini Enterprise
 
@@ -222,6 +233,16 @@ URL, and Google rejects token-less requests before the agent runs.
 
 ## Troubleshooting
 
+- **"The agent requires additional authorization for: …":** expected on each
+  operator's first use. Click **Authorize**, choose an account in your
+  organization, and allow access.
+- **"Error during authorization" after allowing access:** Gemini Enterprise
+  could not exchange the consent for a token. Check the OAuth client's
+  redirect URIs (step 4) and that the authorization holds the client's
+  current secret. If it persists, create a new OAuth client and a new
+  authorization, and attach that to the registration.
+- **"is used by another agent" when registering:** the authorization belongs
+  to another registration; create a new one for this agent.
 - **401 on the agent card export or from Gemini Enterprise:** no valid Google
   token reached the runtime. Run `gcloud auth login` / `gcloud auth
   application-default login`, and confirm the registration has the

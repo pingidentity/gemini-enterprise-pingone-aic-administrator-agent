@@ -123,6 +123,11 @@ module "agent_engine" {
     email  = google_service_account.runtime.email
   }
 
+  # Gemini Enterprise creates sessions under the engine as operators use the
+  # agent, and the API refuses to delete an engine that has any, so without
+  # FORCE `terraform destroy` fails on every deployment that has been used.
+  deletion_policy = "FORCE"
+
   deployment_files = {
     source_config = {
       source_path       = "assets/source.tar.gz"
