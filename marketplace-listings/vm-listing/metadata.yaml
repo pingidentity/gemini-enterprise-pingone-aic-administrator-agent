@@ -104,6 +104,10 @@ spec:
         description: Minimum Agent Engine instances kept warm. 1 avoids a cold start on the first prompt after idle (small always-on cost); 0 scales to zero.
         varType: integer
         defaultValue: 1
+      - name: create_validation_instance
+        description: Create the small idle compute instance that Google Cloud Marketplace validation requires. The agent does not use it; set false when deploying with Terraform outside Marketplace.
+        varType: boolean
+        defaultValue: true
       - name: zone
         description: The GCP zone for the validation compute instance. A zone outside the deployment region is replaced by one inside it.
         varType: string
@@ -123,7 +127,7 @@ spec:
       - name: source_image
         description: Source image for the validation compute instance.
         varType: string
-        defaultValue: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image
+        defaultValue: projects/forgerock-public/global/images/pingone-aic-administrator-agent-image-v20261111
       - name: network
         description: The VPC network to attach the validation instance to.
         varType: string

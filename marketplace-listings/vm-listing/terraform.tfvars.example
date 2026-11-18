@@ -1,0 +1,24 @@
+# Terraform deployment without Google Cloud Marketplace.
+# Copy to terraform.tfvars and replace the <...> values.
+
+project_id = "<PROJECT_ID>"
+region     = "us-central1"
+
+# Prefix for the runtime service account's name (letters, digits, hyphens).
+goog_cm_deployment_name = "pingaic"
+
+# Display name of the Agent Engine instance.
+agent_engine_name = "pingone-aic-administrator"
+
+# Your PingOne Advanced Identity Cloud tenant.
+ping_base_url = "https://openam-<tenant>.forgeblocks.com"
+ping_realm    = "alpha"
+
+# IDs (not values) of the four Secret Manager secrets you created.
+ping_service_account_id_secret = "pingaic-service-account-id"
+ping_private_jwk_secret        = "pingaic-private-jwk"
+ping_audit_api_key_secret      = "pingaic-audit-api-key"
+ping_audit_api_secret_secret   = "pingaic-audit-api-secret"
+
+# The validation compute instance exists only for Marketplace validation.
+create_validation_instance = false

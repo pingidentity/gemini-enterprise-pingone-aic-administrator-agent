@@ -151,6 +151,12 @@ variable "min_instances" {
 }
 
 # Compute instance (Marketplace validation requires a VM in the package)
+variable "create_validation_instance" {
+  description = "Create the small idle compute instance that Google Cloud Marketplace validation requires. The agent does not use it: set false when deploying with Terraform outside Marketplace, which also skips the zone, machine, disk, image and network settings below."
+  type        = bool
+  default     = true
+}
+
 variable "zone" {
   description = "The GCP zone for the validation compute instance. A zone outside the deployment region is replaced by one inside it."
   type        = string
@@ -178,7 +184,7 @@ variable "boot_disk_type" {
 variable "source_image" {
   description = "Source image for the boot disk."
   type        = string
-  default     = "projects/forgerock-public/global/images/pingone-aic-administrator-agent-image"
+  default     = "projects/forgerock-public/global/images/pingone-aic-administrator-agent-image-v20261111"
 }
 
 variable "network" {

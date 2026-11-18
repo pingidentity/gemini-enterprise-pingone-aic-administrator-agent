@@ -58,9 +58,20 @@ that deploys Agent Engine into the customer's project.
   exempt from the org policy that blocks IAM bindings for Google-side
   principals. Then update the package path in Producer Portal → Deployment
   package and re-validate. Current object:
-  `deployment/pingone-aic-administrator-agent-v1.0.4-3.zip`; the next upload
-  is `-v1.0.4-4.zip`. A changed package must be resubmitted for Google's
-  deployment package review.
+  `deployment/pingone-aic-administrator-agent-v1.0.4-5.zip`; the next upload
+  is `-v1.0.4-6.zip`. A validated package goes live only when the listing's
+  update is published (Overview → Publish).
+- **Validation VM image:** validation scans the image for OS vulnerabilities
+  and fails on outdated Debian packages. Rebuild it from the latest
+  `debian-12` image with `apt-get full-upgrade` applied, as a new versioned
+  image (`pingone-aic-administrator-agent-image-vYYYYMMDD`, family
+  `pingone-aic-administrator-agent`, storage location `us`) carrying the
+  listing's license
+  `projects/forgerock-public/global/licenses/cloud-marketplace-5342f74725db910d-df1ebeb69c0ba664`.
+  Then point `source_image` in `variables.tf`, `metadata.yaml` and
+  `metadata.display.yaml` at it, ship a new package, and select the image
+  under Deployment package → Image 1. Current image:
+  `pingone-aic-administrator-agent-image-v20261111`.
 - **Validation:** requires the VM in the package (it is there, idle, not part
   of the serving path). Validate metadata with Google's CFT CLI before every
   upload (`go install github.com/GoogleCloudPlatform/cloud-foundation-toolkit/cli@latest`,
