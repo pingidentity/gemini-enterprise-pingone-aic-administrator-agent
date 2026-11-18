@@ -23,6 +23,7 @@ files=(
   metadata.yaml
   metadata.display.yaml
   marketplace_test.tfvars
+  terraform.tfvars.example
   agent_config.auto.tfvars
   README.md
   assets/source.tar.gz

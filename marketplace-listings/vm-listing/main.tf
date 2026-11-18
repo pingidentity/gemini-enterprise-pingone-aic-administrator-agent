@@ -246,7 +246,12 @@ moved {
 
 # 3. Compute instance: Marketplace validation currently requires a VM in the
 # package. The instance is a small idle Debian box and is not part of the
-# agent's serving path. When var.network is empty (the default), a dedicated
+# agent's serving path. Deployments run with Terraform outside Marketplace
+# set var.create_validation_instance = false: no instance, network, subnet or
+# instance identity is created, and the Marketplace image is never read
+# (customers' projects have no access to it). Adding count kept existing
+# Marketplace deployments' objects: Terraform moves an object without an
+# index to index 0 on its own. When var.network is empty (the default), a dedicated
 # VPC and subnet are created for it. The deployment then works in projects
 # that have no pre-existing network (e.g. fresh validation projects).
 # Marketplace's network picker submits "default" when the customer takes the
@@ -255,23 +260,24 @@ moved {
 # creates its dedicated network instead of referencing a possibly missing
 # one. Customers with a real custom VPC pass its name or self-link.
 locals {
+  create_vm = var.create_validation_instance
   # null and "" both mean "unspecified" (a harness may inject either form);
   # the bare name "default" is the network picker's default submission.
-  use_created_network = (
+  use_created_network = local.create_vm && (
     var.network == null || var.network == "" || var.network == "default"
   )
   # The instance must sit in the deployment region, where its subnet is
   # created: a zone outside that region is replaced by one inside it.
   zone_in_region = startswith(coalesce(var.zone, "-"), "${var.region}-")
   zone = (
-    local.zone_in_region
+    local.zone_in_region || !local.create_vm
     ? var.zone
     : sort(data.google_compute_zones.region[0].names)[0]
   )
 }
 
 data "google_compute_zones" "region" {
-  count   = local.zone_in_region ? 0 : 1
+  count   = local.create_vm && !local.zone_in_region ? 1 : 0
   project = local.project_id
   region  = var.region
   status  = "UP"
@@ -295,6 +301,7 @@ resource "google_compute_subnetwork" "validation" {
 }
 
 resource "google_compute_instance" "instance" {
+  count        = local.create_vm ? 1 : 0
   name         = "${var.goog_cm_deployment_name}-vm"
   machine_type = var.machine_type
   zone         = local.zone
@@ -332,12 +339,13 @@ resource "google_compute_instance" "instance" {
   # A dedicated, minimal identity: the validation instance shares no
   # permissions with the agent runtime.
   service_account {
-    email  = google_service_account.validation_vm.email
+    email  = google_service_account.validation_vm[0].email
     scopes = ["https://www.googleapis.com/auth/devstorage.read_only"]
   }
 }
 
 resource "google_service_account" "validation_vm" {
+  count        = local.create_vm ? 1 : 0
   account_id   = local.validation_sa_id
   display_name = "Marketplace validation instance"
 }
