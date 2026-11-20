@@ -951,15 +951,21 @@ class UiRequestHandler(DefaultRequestHandler):
     async def _bind_task(self, params, call_context):
         try:
             await self._bind_ui_task(params, call_context)
-        except UiActionError as exc:
-            raise InvalidParamsError(str(exc)) from None
+        except UiActionError:
+            # Rejected input still gets an answer. In a new task the executor
+            # meets the same error (its checks are a superset of these) and
+            # replies with it in a failed task. Raising here instead ends a
+            # stream before its first event, which Gemini Enterprise reports
+            # only as "Agent returned an empty stream".
+            params.message.ClearField("task_id")
 
     async def _bind_ui_task(self, params, call_context):
         if renderer_error(params.message):
             # The client could not render a surface; answer in a fresh task.
             params.message.ClearField("task_id")
             return
-        # Unsupported structured input is rejected here, before a task exists.
+        # Unsupported structured input stops binding here; _bind_task then lets
+        # the executor reject it in a new task.
         event = action_envelope(params.message)
         if not params.message.context_id:
             return
@@ -981,7 +987,13 @@ class UiRequestHandler(DefaultRequestHandler):
             params.message.ClearField("task_id")
             return
         if params.message.task_id:
-            return
+            if await self.task_store.get(params.message.task_id, call_context):
+                return
+            # The task lived on an instance that has since restarted, or has
+            # expired. The SDK would reject the message before its first event;
+            # a new task answers it instead, and a stale approval in it fails
+            # closed because its pending review is gone as well.
+            params.message.ClearField("task_id")
         runtime = self.agent_executor._runtime()
         pending = await runtime.store.get(
             "pending", runtime.key(params.message.context_id, actor)

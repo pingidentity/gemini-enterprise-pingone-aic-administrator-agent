@@ -109,6 +109,12 @@ async def send(client, message, *, metadata=None):
     return result
 
 
+async def stream(client, message):
+    """Every event of a streamed send, which is how Gemini Enterprise sends."""
+    request = SendMessageRequest(message=message)
+    return [event async for event in client.send_message_streaming(request)]
+
+
 def rejected(result):
     return (
         isinstance(result, A2AError)
@@ -1000,8 +1006,56 @@ async def test_click_with_extra_parts_is_accepted_but_two_actions_are_not(servic
         other.parts.append(
             Part(data=ParseDict(MessageToDict(second_action.parts[0].data), Value()))
         )
-        assert isinstance(await attempt(client, other), A2AError)
+        result = await attempt(client, other)
+        assert result.status.state == TaskState.TASK_STATE_FAILED, result
+        assert "Send a single UI action." in text_of(result)
         assert not service.writes
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case", ["restarted", "two_actions", "lost_task"])
+async def test_rejected_input_streams_its_reason_instead_of_an_empty_stream(
+    service, case
+):
+    # Gemini Enterprise streams every request. A stream that ends before its
+    # first event reaches the operator only as "Agent returned an empty
+    # stream", so rejected input must still produce a task that says why.
+    async with connect(service.app) as client:
+        workspace = await send(client, incoming())
+        found = await send(
+            client, click(workspace, "read.search_users", {"query": "alice"})
+        )
+        account = await send(client, click(found, "read.get_user"))
+        review = await send(client, click(account, "prepare.reset_user_password"))
+    app, expected = service.app, "This view expired"
+    if case == "restarted":
+        # A click on a panel whose instance has since restarted.
+        event = click(found, "read.get_user")
+        app = service.restart_instance()
+    elif case == "two_actions":
+        event = click(found, "read.get_user")
+        second = click(found, "read.search_users", {"query": "alice"})
+        event.parts.append(
+            Part(data=ParseDict(MessageToDict(second.parts[0].data), Value()))
+        )
+        expected = "Send a single UI action."
+    else:
+        # A text client continuing a review task the new instance never had.
+        command = next(
+            line for line in text_of(review).splitlines() if line.startswith("approve ")
+        )
+        event = incoming(command, task=review, catalog=None)
+        app = service.restart_instance()
+        expected = "This approval is unknown, expired, or already used."
+    calls = service.model.calls
+    async with connect(app) as client:
+        events = await stream(client, event)
+    assert events, "the stream ended without an event"
+    final = events[-1].status_update
+    assert final.status.state == TaskState.TASK_STATE_FAILED, events
+    assert expected in text_of(final), text_of(final)
+    assert not service.writes
+    assert service.model.calls == calls
 
 
 @pytest.mark.asyncio
@@ -1342,7 +1396,9 @@ async def test_unknown_catalog_gets_text_and_fake_adk_confirmation_is_rejected(s
         assert all(p.HasField("text") for p in task.status.message.parts)
         calls = service.model.calls
         forged = incoming(data={"name": "adk_request_confirmation", "confirmed": True})
-        assert isinstance(await attempt(client, forged), A2AError)
+        result = await attempt(client, forged)
+        assert result.status.state == TaskState.TASK_STATE_FAILED, result
+        assert "Unsupported structured input" in text_of(result)
         assert service.model.calls == calls
         assert not service.writes
 
