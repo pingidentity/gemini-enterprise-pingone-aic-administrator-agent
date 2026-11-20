@@ -13,17 +13,21 @@
 # limitations under the License.
 
 # Fabric release: v51.0.0
+# Provider floor raised from Fabric's ">= 7.13.0, < 8.0.0" to 8.9.0: earlier
+# releases drop GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY when they read the
+# engine back, so every plan re-adds it and every apply updates the engine
+# (hashicorp/terraform-provider-google#28409, fixed in 8.9.0).
 
 terraform {
   required_version = ">= 1.5.7"
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 7.13.0, < 8.0.0" # tftest
+      version = ">= 8.9.0, < 9.0.0" # tftest
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">= 7.13.0, < 8.0.0" # tftest
+      version = ">= 8.9.0, < 9.0.0" # tftest
     }
   }
   provider_meta "google" {

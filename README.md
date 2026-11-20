@@ -251,6 +251,10 @@ URL, and Google rejects token-less requests before the agent runs.
   `roles/aiplatform.user` on the runtime project.
 - **"This approval is unknown, expired, or already used":** approvals are
   single-use and expire after 10 minutes; request the change again.
+- **"This view expired or belongs to another conversation":** the panel is
+  older than 30 minutes, or the agent's instance restarted since it opened.
+  Send a new text request or start a new conversation. Versions before
+  1.0.4-6 showed this as "Agent returned an empty stream".
 - **The agent cannot reach the tenant:** check the four secret IDs on the
   deployment, and that the values are your tenant service account's real
   credentials.

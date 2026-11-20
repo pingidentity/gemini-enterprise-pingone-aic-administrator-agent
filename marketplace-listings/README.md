@@ -61,6 +61,11 @@ that deploys Agent Engine into the customer's project.
   `deployment/pingone-aic-administrator-agent-v1.0.4-5.zip`; the next upload
   is `-v1.0.4-6.zip`. A validated package goes live only when the listing's
   update is published (Overview → Publish).
+- **Provider version:** the package requires `hashicorp/google` 8.9.0 or
+  later (pinned in `modules/agent-engine/versions.tf`). Earlier releases drop
+  `GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY` when reading the engine, so
+  every plan shows an engine update and every apply redeploys it. `-v1.0.4-6`
+  is the first package on provider 8.x.
 - **Validation VM image:** validation scans the image for OS vulnerabilities
   and fails on outdated Debian packages. Rebuild it from the latest
   `debian-12` image with `apt-get full-upgrade` applied, as a new versioned
