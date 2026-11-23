@@ -65,9 +65,11 @@ curl --fail-with-body --request POST \
    The console equivalent is **Agents → Add agent → Custom agent via A2A**,
    pasting `agent-card.json` and selecting the authorization instead of
    **Skip & Finish**.
-4. Grant the **IdP Admins** group Vertex AI User (`roles/aiplatform.user`) on
-   the runtime project, and grant **Agent User** only to **IdP Admins** in the
-   agent's User permissions. Each operator sees one Google consent prompt the
+4. Grant the **IdP Admins** group a custom role holding only
+   `aiplatform.reasoningEngines.get` and `aiplatform.reasoningEngines.query` on
+   the runtime project (not Vertex AI User, which can also change and delete the
+   runtime), and grant **Agent User** only to **IdP Admins** in the agent's User
+   permissions. Anyone who can invoke the runtime can administer the tenant. Each operator sees one Google consent prompt the
    first time and then uses the agent without further prompts.
 
 Do not register the runtime as an ADK agent (it serves only A2A routes and

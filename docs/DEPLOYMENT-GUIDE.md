@@ -19,7 +19,9 @@ kill, group/role membership changes, direct assignments, and audit lookup, throu
   A2UI v0.9 provides an interactive administration workspace for compatible clients.
 - **Operator access:** grant the **Agent User** role on this agent to the
   customer's **IdP Admins** group in Gemini Enterprise, and grant that same
-  group Vertex AI User on the runtime project so their tokens can invoke it.
+  group a custom operator role on the runtime project so their tokens can
+  invoke it. Anyone who can invoke the runtime can administer the tenant; see
+  [Access controls](../marketplace-listings/vm-listing/README.md#access-controls).
 - **PingAIC authentication:** one shared PingOne AIC service account;
   its ID and private JWK are stored in **GCP Secret Manager**, pulled by the
   runtime GCP service account when the agent needs them. Human attribution lives
@@ -121,10 +123,12 @@ is currently Preview.
 
 The deployment identity, runtime service account, and operator group serve
 different purposes. Operators need both the Gemini Enterprise **Agent User**
-permission and runtime invocation IAM: grant the **IdP Admins** group Vertex AI
-User (`roles/aiplatform.user`, or a custom role holding
-`aiplatform.reasoningEngines.query`) on the runtime project, because Gemini
-Enterprise calls the runtime with each operator's own Google token.
+permission and runtime invocation IAM: grant the **IdP Admins** group a custom operator role holding only `aiplatform.reasoningEngines.get` and `aiplatform.reasoningEngines.query` on the runtime project, because Gemini
+Enterprise calls the runtime with each operator's own Google token. Don't grant
+operators Vertex AI User (`roles/aiplatform.user`): it also lets them update and
+delete the runtime. Even the read-only Vertex AI Viewer role can invoke it, so
+keep other principals off the runtime project; see
+[Access controls](../marketplace-listings/vm-listing/README.md#access-controls).
 See [Agent Runtime authentication](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/runtime/use-an-a2a-agent)
 and [registration below](#4-register-in-gemini-enterprise).
 
@@ -306,8 +310,9 @@ needed.
    the former puts the token in the request header. The console equivalent is
    **Agents → Add agent → Custom agent via A2A**, pasting the card and selecting
    the authorization instead of **Skip & Finish**.
-4. Grant the **IdP Admins** group Vertex AI User on the runtime project (see
-   step 1 above). Without it, operators receive 403 after consenting.
+4. Grant the **IdP Admins** group the custom operator role on the runtime
+   project (see step 1 above). Without it, operators receive 403 after
+   consenting.
 5. Open the agent's **User permissions → Add user**. Assign **Agent User** to
    the **IdP Admins** group, and remove any broader agent grants. This permission
    authorizes use of every capability exposed by this shared privileged agent.
@@ -530,7 +535,7 @@ renderer, so validate appearance and action delivery there after deployment.
 | Deployment succeeds but card export fails | Keep the printed resource name. Check ADC, runtime invocation IAM and runtime logs, then retry `--agent-card "$RESOURCE_NAME"`. The failed export does not delete the runtime. |
 | Runtime reports `No module named 'ping_admin_agent'` | Inspect the staged `dependencies.tar.gz`: it must contain `ping_admin_agent/__init__.py` at its root, without a workstation path prefix. Redeploy using the corrected create/update commands; clearing `__pycache__` does not correct archive paths. |
 | The runtime returns 401 | No Google OAuth2 access token reached Google's front door. From a terminal: run `gcloud auth application-default login`, and use an access token rather than an identity token. From Gemini Enterprise: the registration has no `agentAuthorization`, the operator has not completed the consent, or the authorization URI lacks the `cloud-platform` scope, `access_type=offline` or `prompt=consent`; fix the authorization and re-attach it. Adding IAM grants never fixes a 401. |
-| The runtime returns 403 | The token is valid but its identity lacks `aiplatform.reasoningEngines.query` on the runtime project; grant Vertex AI User to that identity. |
+| The runtime returns 403 | The token is valid but its identity lacks `aiplatform.reasoningEngines.query` on the runtime project; grant it the custom operator role (allow a few minutes for a new grant). |
 | Gemini Enterprise reports an authorization error | Check the IdP Admins agent grant, that the registration references the authorization, and the operator's runtime IAM. PingAIC secret values do not authorize this connection. |
 | Gemini Enterprise asks an operator to connect a Google account | Expected once per operator: it is the consent for the `cloud-platform` authorization. If it repeats on every request, the authorization URI lacks `access_type=offline` or `prompt=consent`; recreate the authorization. |
 | The logo is missing | Confirm `iconUrl` exists in the live card, apply the Gemini Enterprise icon payload after import, and check that the client can load the HTTPS logo URL. A bundle export reporting missing branding needs a runtime update first. |
