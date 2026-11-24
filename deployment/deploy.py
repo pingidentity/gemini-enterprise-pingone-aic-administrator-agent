@@ -390,8 +390,10 @@ def export_agent_card(
     print("scope; the card declares it and Agent Runtime rejects other requests.")
     print("Next: register in Gemini Enterprise as Custom agent via A2A with a")
     print("cloud-platform OAuth authorization attached (agentAuthorization), grant")
-    print("the IdP Admins group Vertex AI User on the runtime project, then grant")
-    print("Agent User to IdP Admins. Operators consent once. No Agent Gateway.")
+    print("the IdP Admins group a custom role holding only")
+    print("aiplatform.reasoningEngines.get and .query on the runtime project (not")
+    print("Vertex AI User), then grant Agent User to IdP Admins. Anyone who can call")
+    print("the runtime can administer the tenant. Operators consent once.")
     print("This deployer does not create the authorization, registration or permissions.")
     print("See README.md for setup and live access/A2UI verification.")
 

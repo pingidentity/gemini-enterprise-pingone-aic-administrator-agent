@@ -14,8 +14,10 @@ explicit operator confirmation.
   Google holds no tenant data; the agent runs inside your tenancy.
 - **Access model:** Gemini Enterprise calls the runtime with each operator's
   own Google token (`cloud-platform` scope). Your admin group needs the Gemini
-  Enterprise **Agent User** permission and Vertex AI User on the runtime
-  project.
+  Enterprise **Agent User** permission and a role on the runtime project that
+  can call the agent. **Anyone who can call the agent can administer your
+  tenant**, so read [Access controls](marketplace-listings/vm-listing/README.md#access-controls)
+  before you grant access.
 - **Tenant authentication:** one shared PingOne Advanced Identity Cloud
   service account; its credentials live in **your** Secret Manager and are
   never embedded in the agent.
@@ -32,7 +34,9 @@ your Gemini Enterprise app to it). Each takes minutes; do them in order.
 
 **Deploying with Terraform instead of Marketplace:** follow the step-by-step
 guide in [`marketplace-listings/vm-listing/README.md`](marketplace-listings/vm-listing/README.md).
-It ships as `README.md` in the deployment package zip and covers the whole
+Download the deployment package zip from the
+[latest release](https://github.com/pingidentity/gemini-enterprise-pingone-aic-administrator-agent/releases/latest).
+The guide ships as `README.md` in that zip and covers the whole
 path, from secrets through `terraform apply` to registration, first use and
 removal.
 
@@ -188,11 +192,28 @@ the same avatar the PingID Device Management agent shows.
 
 ### Step 7: Grant operator access
 
-1. Grant your administrator group **Vertex AI User** (`roles/aiplatform.user`)
-   on the runtime project. Gemini Enterprise calls the runtime with each
-   operator's own token, so their IAM is checked on every request.
+Grant access to the operator group only, with a role that can call the agent
+but not change it. Don't use Vertex AI User: it also lets its holders change
+and delete the agent. [Access controls](marketplace-listings/vm-listing/README.md#access-controls)
+explains why and what else to lock down.
+
+1. Create the operator role on the runtime project and grant it to your
+   administrator group. Gemini Enterprise calls the runtime with each
+   operator's own token, so their IAM is checked on every request:
+
+   ```bash
+   gcloud iam roles create pingaicAgentOperator --project="<PROJECT>" \
+     --title="PingOne AIC Agent Operator" \
+     --description="Call the PingOne AIC Administrator Agent without changing it" \
+     --permissions="aiplatform.reasoningEngines.get,aiplatform.reasoningEngines.query" \
+     --stage=GA
+   gcloud projects add-iam-policy-binding "<PROJECT>" \
+     --member="group:idp-admins@example.com" \
+     --role="projects/<PROJECT>/roles/pingaicAgentOperator" --condition=None
+   ```
+
 2. In Gemini Enterprise, grant the same group **Agent User** on the
-   registered agent.
+   registered agent, and no one else.
 
 ### Step 8: Verify
 
@@ -231,6 +252,12 @@ the same avatar the PingID Device Management agent shows.
 The runtime endpoint cannot be made unauthenticated: it is a Vertex AI API
 URL, and Google rejects token-less requests before the agent runs.
 
+Every tenant change is made as the tenant service account, so runtime IAM is
+the boundary that protects your tenant. Anyone holding
+`aiplatform.reasoningEngines.query` on the runtime project can call the agent
+directly, without Gemini Enterprise; even the read-only Vertex AI Viewer role
+includes it. See [Access controls](marketplace-listings/vm-listing/README.md#access-controls).
+
 ## Troubleshooting
 
 - **"The agent requires additional authorization for: …":** expected on each
@@ -247,8 +274,11 @@ URL, and Google rejects token-less requests before the agent runs.
   token reached the runtime. Run `gcloud auth login` / `gcloud auth
   application-default login`, and confirm the registration has the
   cloud-platform authorization attached with consent completed.
-- **403 on the card export or agent calls:** the caller lacks
-  `roles/aiplatform.user` on the runtime project.
+- **403 on agent calls:** the operator lacks the operator role from step 7
+  on the runtime project, or a new grant hasn't taken effect yet (allow a few
+  minutes).
+- **403 on the card export:** your own account lacks `roles/aiplatform.user`
+  on the runtime project.
 - **"This approval is unknown, expired, or already used":** approvals are
   single-use and expire after 10 minutes; request the change again.
 - **"This view expired or belongs to another conversation":** the panel is
