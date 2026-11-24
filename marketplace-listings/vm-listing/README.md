@@ -135,7 +135,7 @@ details often belong to different teams.
 | Gemini Enterprise app | Its project ID, location (`global`, `us` or `eu`) and app ID, plus Discovery Engine Admin on its project |
 | Operator group | A group (for example *IdP Admins*) whose members have Gemini Enterprise licenses and belong to your Google Workspace or Cloud Identity organization. Everyone in it can administer your tenant |
 | Tools | Terraform 1.5.7 or later, the Google Cloud CLI (`gcloud`) and `jq` |
-| Deployment package | `pingone-aic-administrator-agent.zip`, version 1.0.4-6 or later, from Ping Identity |
+| Deployment package | `pingone-aic-administrator-agent.zip`, version 1.0.4-6 or later, from the [latest release](https://github.com/pingidentity/gemini-enterprise-pingone-aic-administrator-agent/releases/latest) on GitHub |
 
 The agent project and the Gemini Enterprise project can be the same project,
 but a separate agent project keeps access to the agent narrower (see
@@ -143,9 +143,17 @@ but a separate agent project keeps access to the agent narrower (see
 
 ## Step 1: Get the package and set your shell variables
 
-1. Unzip `pingone-aic-administrator-agent.zip` into a new, empty folder that
-   you will keep. Terraform stores the deployment's state there, and you need
-   it to update or remove the deployment later.
+1. Download `pingone-aic-administrator-agent.zip` from the
+   [latest release](https://github.com/pingidentity/gemini-enterprise-pingone-aic-administrator-agent/releases/latest) and check it against the SHA-256 checksum listed
+   on the release page:
+
+   ```bash
+   shasum -a 256 pingone-aic-administrator-agent.zip
+   ```
+
+   Unzip it into a new, empty folder that you will keep. Terraform stores the
+   deployment's state there, and you need it to update or remove the
+   deployment later.
 2. Open a terminal in that folder and sign in to Google Cloud, both for
    `gcloud` and for Terraform:
 
@@ -480,7 +488,8 @@ again in the package folder. If a change replaces the Agent Engine instance,
 it gets a new ID: export the card again (step 6) and update the
 registration's card in Gemini Enterprise.
 
-**To upgrade to a new package version,** unzip it over the same folder, so
+**To upgrade to a new package version,** download it from the
+[latest release](https://github.com/pingidentity/gemini-enterprise-pingone-aic-administrator-agent/releases/latest) and unzip it over the same folder, so
 that `terraform.tfvars` and `terraform.tfstate` stay. Then run
 `terraform init -upgrade` and `terraform apply`. The apply updates the agent
 in place, in about 3 minutes, and keeps its ID and registration.

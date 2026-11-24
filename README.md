@@ -34,7 +34,9 @@ your Gemini Enterprise app to it). Each takes minutes; do them in order.
 
 **Deploying with Terraform instead of Marketplace:** follow the step-by-step
 guide in [`marketplace-listings/vm-listing/README.md`](marketplace-listings/vm-listing/README.md).
-It ships as `README.md` in the deployment package zip and covers the whole
+Download the deployment package zip from the
+[latest release](https://github.com/pingidentity/gemini-enterprise-pingone-aic-administrator-agent/releases/latest).
+The guide ships as `README.md` in that zip and covers the whole
 path, from secrets through `terraform apply` to registration, first use and
 removal.
 
